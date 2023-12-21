@@ -77,6 +77,8 @@ void quick_sort(int *A, int p, int r) {
     }
 }
 
+
+
 int parse_cmd(int argc, char **argv) {
 
     /// parsing argomento
@@ -99,6 +101,86 @@ int parse_cmd(int argc, char **argv) {
     return 0;
 }
 
+/**
+ * Unisce due sottoarray dell'array dato.
+ * 
+ * @param arr L'array da unire.
+ * @param start L'indice di inizio del primo sottoarray.
+ * @param mid L'indice di fine del primo sottoarray.
+ * @param end L'indice di fine del secondo sottoarray.
+ */
+void merge(int *arr, int start, int mid, int end) {
+    int leftSize = mid - start + 1; // Dimensione del sottoarray sinistro
+    int rightSize = end - mid; // Dimensione del sottoarray destro
+
+    int *leftArray = new int[leftSize]; // Array temporaneo per il sottoarray sinistro
+    int *rightArray = new int[rightSize]; // Array temporaneo per il sottoarray destro
+
+    // Copia gli elementi dall'array originale al sottoarray sinistro
+    for (int i = 0; i < leftSize; i++) {
+        leftArray[i] = arr[start + i];
+        ct_read++; // Incrementa il contatore degli accessi in lettura per ogni operazione di lettura
+    }
+
+    // Copia gli elementi dall'array originale al sottoarray destro
+    for (int j = 0; j < rightSize; j++) {
+        rightArray[j] = arr[mid + 1 + j];
+        ct_read++; // Incrementa il contatore degli accessi in lettura per ogni operazione di lettura
+    }
+
+    int i = 0; // Indice per il sottoarray sinistro
+    int j = 0; // Indice per il sottoarray destro
+    int k = start; // Indice per l'array unito
+
+    // Unisce i sottoarray sinistro e destro nell'array originale
+    while (i < leftSize && j < rightSize) {
+        if (leftArray[i] <= rightArray[j]) {
+            swap(arr[k], leftArray[i]);
+            i++;
+        } else {
+            swap(arr[k], rightArray[j]);
+            j++;
+        }
+        k++;
+        ct_swap++; // Incrementa il contatore degli accessi in memoria per ogni operazione di scambio
+    }
+
+    // Copia gli eventuali elementi rimanenti dal sottoarray sinistro all'array originale
+    while (i < leftSize) {
+        swap(arr[k], leftArray[i]);
+        i++;
+        k++;
+    }
+
+    // Copia gli eventuali elementi rimanenti dal sottoarray destro all'array originale
+    while (j < rightSize) {
+        swap(arr[k], rightArray[j]);
+        j++;
+        k++;
+    }
+
+    delete[] leftArray; // Libera la memoria allocata per il sottoarray sinistro
+    delete[] rightArray; // Libera la memoria allocata per il sottoarray destro
+}
+
+void merge_sort(int *A, int p, int r) {
+    if (p < r) {
+        int q = (p + r) / 2;
+        merge_sort(A, p, q);
+        merge_sort(A, q + 1, r);
+        merge(A, p, q, r);
+    }
+}
+
+void block_sort(int *A, int p, int r) {
+    if (p < r) {
+        int q = partition(A, p, r);
+        block_sort(A, p, q - 1);
+        block_sort(A, q + 1, r);
+    }
+}
+
+
 int main(int argc, char **argv) {
     int i, test;
     int *A;
@@ -111,19 +193,6 @@ int main(int argc, char **argv) {
     A = new int[max_dim];
 
     n = max_dim;
-
-    // creazione file input: NON USARE PIU' --> il file data.txt ufficiale è stato allegato, per permettere confronti equivalenti
-    //  FILE *f = fopen("data.txt", "w+");
-    //  for (int j = 0; j < 100; j++) {
-    //      for (int i = 0; i < n; i++) {
-    //          int v = 0;
-    //          v=(int)(100000*pow(2,-i/(0.0+n)*25));
-    //          v+=rand()%50-25;
-    //          fprintf(f, "%d,", v);
-    //      }
-    //      fprintf(f, "\n");
-    //  }
-    //  fclose(f);
 
     ifstream input_data;
     input_data.open("data.txt");
@@ -152,8 +221,7 @@ int main(int argc, char **argv) {
         ct_read = 0;
 
         /// algoritmo di sorting
-        quick_sort(A, 0, n - 1);
-
+        merge_sort(A, 0, n - 1);
         if (details) {
             printf("Output:\n");
             print_array(A, n);
@@ -168,9 +236,11 @@ int main(int argc, char **argv) {
         printf("Test %d %d\n", test, ct_read);
     }
 
-    printf("%d,%d,%.1f,%d\n",
-           ntests,
-           read_min, (0.0 + read_avg) / ntests, read_max);
+    
+    printf("Numero dei test: %d\n", ntests);
+    printf("Letture minime eseguite: %d\n", read_min);
+    printf("Media delle letture eseguite: %.1f\n", (0.0 + read_avg) / ntests);
+    printf("Letture massime eseguite: %d\n", read_max);
 
     delete[] A;
 
